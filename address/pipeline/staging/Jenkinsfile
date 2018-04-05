@@ -1,0 +1,35 @@
+podTemplate(label: 'staging', 
+  containers: [
+    containerTemplate(name: 'kubectl', image: 'jorgeacetozi/kubectl:1.7.0', ttyEnabled: true, command: 'cat')
+  ],
+  envVars: [
+    secretEnvVar(key: 'DOCKERHUB_USERNAME', secretName: 'dockerhub-username-secret', secretKey: 'USERNAME')
+  ])
+{
+  node ('staging') {
+    def image_name = "address"
+
+    checkout scm
+
+    stage('Deploy release version to Staging environment using RollingUpdate strategy') {
+      container('kubectl') {
+        sh """
+          sed -i "s/ADDRESS_CONTAINER_IMAGE/${DOCKERHUB_USERNAME}\\/${image_name}:${RELEASE_VERSION}/" ./address/k8s/staging/address-staging-deployment.yaml
+
+          kubectl apply -f address/k8s/staging/ -l app=address
+          kubectl rollout status deployment address-deployment-staging
+
+          kubectl get service address-service-staging
+          kubectl get endpoints address-service-staging
+        """
+      }
+    }
+
+    stage ('Run Acceptance Tests') {
+      build job: 'address-acceptance-test', parameters: [
+        [$class: 'StringParameterValue', name: 'GIT_BRANCH', value: 'master'],
+        [$class: 'StringParameterValue', name: 'ADDRESS_URL', value: 'http://address-service-staging:8080']
+      ]
+    }
+  }
+}
