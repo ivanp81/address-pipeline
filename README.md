@@ -5,12 +5,16 @@ This is a sample CI pipeline built with Jenkins CI server. You can find the rela
 ```
 https://github.com/ivanp81/address
 ```
-# Pipeline
+# Features
 - Docker
+- Jenkins
 - Kubernetes
 - Artifactory
 - GitHub
 - DockerHub
 
-# How to Run 
+# Configuration
+TODO 
+
+# How the pipeline works 
 TODO
